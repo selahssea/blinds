@@ -13,6 +13,11 @@
             text-align: center;
             font-family: Arial, Helvetica, sans-serif;
         }
+
+        .range {
+            margin-top: 100px;
+        }
+
         a {
             /* touch-action: manipulation; */
             display: block;
@@ -47,25 +52,40 @@
 <body>
     Blinds
 
+    <div class="range">
+        <input type="range" min="1" max="100" value="100" class="slider" id="range">
+    </div>
+
     <a id="open" href="/open">Open</a>
     <a id="close" href="/close">Close</a>
+    <a id="stop" href="/stop">Stop</a>
 
     <script>
         const openBtn = document.querySelector('#open');
         const closeBtn = document.querySelector('#close');
+        const stopBtn = document.querySelector('#stop');
+        const rangeSlider = document.querySelector('#range');
 
         openBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            fetch('/open').then(res => {
-                console.log('Response: ', res);
-            });
+            const percentage = rangeSlider.value || 100;
+            fetch(`/open?percentage=${percentage}`)
+                .then(res => console.log('Response: ', res));
         })
 
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            fetch('/close').then(res => console.log('Response: ', res));
+            const percentage = rangeSlider.value || 100;
+            fetch(`/close?percentage=${percentage}`)
+                .then(res => console.log('Response: ', res));
+        })
+
+        stopBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fetch('/stop').then(res => console.log('Response: ', res));
         })
     </script>
 </body>

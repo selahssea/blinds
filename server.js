@@ -1,36 +1,24 @@
-// require all dependencies
 const express = require('express');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
 const scriptName = __dirname + '/blinds.py';
-// const scriptName = 'test.py';
+const cleanupScriptPath = __dirname + '/cleanup.py';
 const statusFileName = __dirname + '/status.txt';
 const app = express();
 
-// set up the template engine
 app.set('views', __dirname);
-// app.set('view engine', 'html');
 app.use(express.static(__dirname + '/public'));
 
-// GET response for '/'
 app.get('/', function (req, res) {
-
-    // render the 'index' template, and pass in a few variables
-    res.render('index', { title: 'Blinds', message: 'Blinds' });
+    res.render('index');
 });
 
 app.get('/close', function(req, res) {
-    // res.send('closed resp');
-    // console.log('Close command');
-    // return;
-    // Call your python script here.
-    // I prefer using spawn from the child process module instead of the Python shell
     const scriptPath = scriptName;
-    const process = spawn('python3', [scriptPath, 'close'])
+    const percentage = req.query.percentage ? req.query.percentage : '';
+    const process = spawn('python3', [scriptPath, 'close', percentage]);
     process.stdout.on('data', (myData) => {
-        // Do whatever you want with the returned data.
-        // ...
         fs.writeFile(statusFileName, 'closed', function(err) {
             if(err) {
                 return console.log(err);
@@ -39,21 +27,17 @@ app.get('/close', function(req, res) {
         }); 
         res.send('closed');
     })
-    process.stderr.on('data', (myErr) => {
-        // If anything gets written to stderr, it'll be in the myErr variable
+    process.stderr.on('data', (err) => {
+        console.error('Blinds.py error: ', String(err))
+        res.status(500).send('Blinds close script error');
     })
 })
+
 app.get('/open', function(req, res) {
-    // res.send('opened resp');
-    // console.log('Open command');
-    // return;
-    // Call your python script here.
-    // I prefer using spawn from the child process module instead of the Python shell
     const scriptPath = scriptName;
-    const process = spawn('python3', [scriptPath, 'open'])
+    const percentage = req.query.percentage ? req.query.percentage : '';
+    const process = spawn('python3', [scriptPath, 'open', percentage])
     process.stdout.on('data', (myData) => {
-        // Do whatever you want with the returned data.
-        // ...
         fs.writeFile(statusFileName, 'opened', function(err) {
             if(err) {
                 return console.log(err);
@@ -62,10 +46,30 @@ app.get('/open', function(req, res) {
         }); 
         res.send('opened');
     })
-    process.stderr.on('data', (myErr) => {
-        // If anything gets written to stderr, it'll be in the myErr variable
+    process.stderr.on('data', (err) => {
+        console.error('Blinds.py error: ', String(err));
+        res.status(500).send('Blinds open script error');
     })
 })
+
+app.get('/stop', function(req, res) {
+    const killBlindsPy = spawn('pkill', ['-9', '-f', 'blinds.py']);
+    killBlindsPy.stdout.on('data', data => {
+        console.log(`pkill out: ${data}`);
+    })
+    killBlindsPy.stdout.on('close', code => {
+        console.error(`stderr: ${code}`);
+        const process = spawn('python3', [cleanupScriptPath])
+        process.stdout.on('data', (myData) => {
+            res.send('stopped');
+        })
+        process.stderr.on('data', (err) => {
+            console.error('Cleanup.py error: ', String(err));
+            res.status(500).send('Cleanup script error');
+        })
+    })
+})
+
 app.get('/status', function(req, res) {
     fs.readFile(statusFileName, 'utf8', function(err, data) {
         console.log(data);
