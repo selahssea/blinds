@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blinds</title>
+    <style>
+        html {
+            touch-action: manipulation;
+        }
+        body {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        a {
+            /* touch-action: manipulation; */
+            display: block;
+            width: 100px;
+            height: 100px;
+            margin: 100px auto;
+            text-align: center;
+            line-height: 100px;
+            border-radius: 5px;
+            text-decoration: none;
+            color:beige;
+            text-shadow: -1px -1px 0 black;
+            box-shadow: 3px 3px 1px grey;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a:active {
+            top: 2px;
+            left: 2px;
+            box-shadow: 1px 1px 1px grey;
+        }
+
+        #open {
+            background-color:lightskyblue;
+        }
+        #close {
+            background-color:darkslateblue;
+        }
+    </style>
+</head>
+<body>
+    Blinds
+
+    <a id="open" href="/open">Open</a>
+    <a id="close" href="/close">Close</a>
+
+    <script>
+        const openBtn = document.querySelector('#open');
+        const closeBtn = document.querySelector('#close');
+
+        openBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fetch('/open').then(res => {
+                console.log('Response: ', res);
+            });
+        })
+
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fetch('/close').then(res => console.log('Response: ', res));
+        })
+    </script>
+</body>
+</html>
