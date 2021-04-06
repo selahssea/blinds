@@ -23,6 +23,7 @@ except IndexError:
     arg_percentage = DEFAULT_PERCENTAGE
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
 PINS = [
     14,  # 1
@@ -45,7 +46,7 @@ def full_step(lst, sleep):
         GPIO.output(lst[n], GPIO.HIGH)
         time.sleep(sleep)
 
-def calculate_steps(percentage = DEFAULT_PERCENTAGE, steps = STEPS_TO_OPEN_OR_CLOSE): # found out in experiment
+def calculate_steps(percentage = DEFAULT_PERCENTAGE, steps = STEPS_TO_OPEN_OR_CLOSE):
     if not percentage or percentage > DEFAULT_PERCENTAGE:
         percentage = DEFAULT_PERCENTAGE
     
@@ -54,7 +55,7 @@ def calculate_steps(percentage = DEFAULT_PERCENTAGE, steps = STEPS_TO_OPEN_OR_CL
     
     return round(percentage/DEFAULT_PERCENTAGE * steps)    
 
-def run(sleep = DELAY_BETWEEN_STEPS, ccw = True, steps = STEPS_TO_OPEN_OR_CLOSE): # found out in experiment
+def run(sleep = DELAY_BETWEEN_STEPS, ccw = True, steps = STEPS_TO_OPEN_OR_CLOSE):
     print(sys.argv)
     lst = PINS if ccw else PINS[::-1]
     step = 0

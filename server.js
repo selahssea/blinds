@@ -15,9 +15,9 @@ app.get('/', function (req, res) {
 });
 
 app.get('/close', function(req, res) {
-    const scriptPath = scriptName;
-    const percentage = req.query.percentage ? req.query.percentage : '';
-    const process = spawn('python3', [scriptPath, 'close', percentage]);
+    const spawnArgs = [scriptName, 'close'];
+    req.query.percentage && spawnArgs.push(req.query.percentage);
+    const process = spawn('python3', spawnArgs);
     process.stdout.on('data', (myData) => {
         fs.writeFile(statusFileName, 'closed', function(err) {
             if(err) {
@@ -27,6 +27,13 @@ app.get('/close', function(req, res) {
         }); 
         res.send('closed');
     })
+    process.on('close', (myData) => {
+        try {
+            res.send('interrupted');
+        } catch (error) {
+            console.log('Looks like spawn was closed without interruption');
+        }
+    })
     process.stderr.on('data', (err) => {
         console.error('Blinds.py error: ', String(err))
         res.status(500).send('Blinds close script error');
@@ -34,9 +41,9 @@ app.get('/close', function(req, res) {
 })
 
 app.get('/open', function(req, res) {
-    const scriptPath = scriptName;
-    const percentage = req.query.percentage ? req.query.percentage : '';
-    const process = spawn('python3', [scriptPath, 'open', percentage])
+    const spawnArgs = [scriptName, 'close'];
+    req.query.percentage && spawnArgs.push(req.query.percentage);
+    const process = spawn('python3', spawnArgs);
     process.stdout.on('data', (myData) => {
         fs.writeFile(statusFileName, 'opened', function(err) {
             if(err) {
@@ -45,6 +52,13 @@ app.get('/open', function(req, res) {
             console.log('The file was saved!');
         }); 
         res.send('opened');
+    })
+    process.on('close', (myData) => {
+        try {
+            res.send('interrupted');
+        } catch (error) {
+            console.log('Looks like spawn was closed without interruption');
+        }
     })
     process.stderr.on('data', (err) => {
         console.error('Blinds.py error: ', String(err));
@@ -57,10 +71,11 @@ app.get('/stop', function(req, res) {
     killBlindsPy.stdout.on('data', data => {
         console.log(`pkill out: ${data}`);
     })
-    killBlindsPy.stdout.on('close', code => {
-        console.error(`stderr: ${code}`);
+    killBlindsPy.on('close', code => {
+        console.log(`pkill closed with code: ${code}`);
         const process = spawn('python3', [cleanupScriptPath])
-        process.stdout.on('data', (myData) => {
+        process.stdout.on('data', (data) => {
+            console.error('Cleanup.py log:\n', String(data));
             res.send('stopped');
         })
         process.stderr.on('data', (err) => {
