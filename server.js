@@ -41,7 +41,7 @@ app.get('/close', function(req, res) {
 })
 
 app.get('/open', function(req, res) {
-    const spawnArgs = [scriptName, 'close'];
+    const spawnArgs = [scriptName, 'open'];
     req.query.percentage && spawnArgs.push(req.query.percentage);
     const process = spawn('python3', spawnArgs);
     process.stdout.on('data', (myData) => {
